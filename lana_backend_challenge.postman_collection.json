@@ -1,0 +1,136 @@
+{
+	"info": {
+		"_postman_id": "18f7cfe7-1037-4598-8877-09348139207f",
+		"name": "lana_backend_challenge",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get checkout amount",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/checkout/basket/e3b7dca3-94a2-4b69-a2b3-90a6bc8f7a42/amount",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"checkout",
+						"basket",
+						"e3b7dca3-94a2-4b69-a2b3-90a6bc8f7a42",
+						"amount"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create checkout",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.environment.set(\"variable_key\", \"variable_value\");"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/checkout/create",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"checkout",
+						"create"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add product",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"basket_id\": \"e3b7dca3-94a2-4b69-a2b3-90a6bc8f7a42\",\n    \"product_code\": \"PEN\",\n    \"quantity\": 3\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/checkout/basket/add_product",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"checkout",
+						"basket",
+						"add_product"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete checkout basket",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"url": {
+					"raw": "http://localhost:8080/checkout/basket/8edca05b-c5b0-460b-b853-9e104bcad945",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"checkout",
+						"basket",
+						"8edca05b-c5b0-460b-b853-9e104bcad945"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "123",
+			"value": "{basket_id}"
+		},
+		{
+			"key": "{{basket_id}}",
+			"value": "{{basket_id}}"
+		}
+	]
+}

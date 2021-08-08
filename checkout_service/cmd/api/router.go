@@ -6,8 +6,9 @@ import (
 )
 
 func setRoutes(router *chi.Mux, checkoutHandler handler.CheckoutHandler) {
+	// todo: define middlewares for auth and validation
 	router.Get("/checkout/basket/{basket_id}/amount", checkoutHandler.GetBasketTotalAmount)
 	router.Post("/checkout/create", checkoutHandler.CreateBasket)
-	router.Post("/checkout/basket/add_product", checkoutHandler.AddProduct)
+	router.Put("/checkout/basket/add_product", checkoutHandler.AddProduct)
 	router.Delete("/checkout/basket/{basket_id}", checkoutHandler.DeleteBasket)
 }

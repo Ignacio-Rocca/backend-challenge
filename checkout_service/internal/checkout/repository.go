@@ -1,7 +1,5 @@
 package checkout
 
-import "errors"
-
 var (
 	checkoutDB = initEmptyCheckoutDB()
 	productsDB = initProductsDB()
@@ -29,8 +27,8 @@ func initEmptyCheckoutDB() CheckoutDB {
 func initProductsDB() ProductsDB {
 	return []Product{
 		{Code: _penCode, Name: "Lana Pen", Price: 5.00},
-		{Code: _tshirtCode, Name: "Lana T-Shirt", Price: 5.00},
-		{Code: _mugCode, Name: "Lana Coffee Mug", Price: 5.00},
+		{Code: _tshirtCode, Name: "Lana T-Shirt", Price: 20.00},
+		{Code: _mugCode, Name: "Lana Coffee Mug", Price: 7.50},
 	}
 }
 

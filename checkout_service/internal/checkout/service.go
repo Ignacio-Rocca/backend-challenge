@@ -13,8 +13,8 @@ var (
 
 type Service interface {
 	GetBasketTotalAmount(basketId string) (float64, error)
-	CreateBasket() (Basket, error)
-	AddProduct(basketId, productCode string) error
+	CreateBasket() Basket
+	AddProduct(basketId, productCode string, quantity int) (Basket, error)
 	DeleteBasket(basketId string) error
 }
 
@@ -35,43 +35,46 @@ func (s *service) GetBasketTotalAmount(basketId string) (float64, error) {
 
 	totalAmount := 0.00
 
-	for product, quantity := range basket.Products {
-		switch product.Code {
+	for productCode, quantity := range basket.Products {
+		switch productCode {
 		case _penCode:
-			buy2Get1Free(product.Price, quantity)
+			totalAmount += calculatePenTotalAmount(quantity)
 		case _tshirtCode:
-			if quantity >= 3 {
-				totalAmount +=  product.Price * float64(quantity) * _tshirtDiscount
-			} else {
-				totalAmount +=  product.Price * float64(quantity)
-			}
+			totalAmount += calculateTshirtTotalAmount(quantity)
 		case _mugCode:
-			totalAmount += product.Price * float64(quantity)
+			totalAmount += calculateMugTotalAmount(quantity)
 		}
 	}
 
 	return totalAmount, nil
 }
 
-func (s *service) CreateBasket() (Basket, error) {
-	return Basket{}, nil
+func (s *service) CreateBasket() Basket {
+	basket := NewEmptyBasket()
+	_, exist := checkoutDB[basket.ID]
+	for exist {
+		basket = NewEmptyBasket()
+		_, exist = checkoutDB[basket.ID]
+	}
+	checkoutDB[basket.ID] = basket
+	return basket
 }
 
-func (s *service) AddProduct(basketId, productCode string) error {
+func (s *service) AddProduct(basketId, productCode string, quantity int) (Basket, error) {
 	basket, ok := checkoutDB[basketId]
 	if !ok {
 		log.Println(ErrInvalidBasketId.Error())
-		return ErrInvalidBasketId
+		return Basket{}, ErrInvalidBasketId
 	}
 
 	product, err := productsDB.GetProductByCode(productCode)
 	if err != nil {
 		log.Println(err.Error())
-		return err
+		return Basket{}, err
 	}
 
-	basket.Products[product] += 1
-	return nil
+	basket.Products[product.Code] += quantity
+	return basket, nil
 }
 
 func (s *service) DeleteBasket(basketId string) error {
@@ -80,6 +83,41 @@ func (s *service) DeleteBasket(basketId string) error {
 	}
 	delete(checkoutDB, basketId)
 	return nil
+}
+
+
+func calculatePenTotalAmount(quantity int) float64 {
+	pen, err := productsDB.GetProductByCode(_penCode)
+	if err != nil {
+		log.Println(err.Error())
+		return 0
+	}
+
+	return buy2Get1Free(pen.Price, quantity)
+}
+
+func calculateTshirtTotalAmount(quantity int) float64 {
+	tshirt, err := productsDB.GetProductByCode(_tshirtCode)
+	if err != nil {
+		log.Println(err.Error())
+		return 0
+	}
+
+	if quantity >= 3 {
+		return  tshirt.Price * float64(quantity) * _tshirtDiscount
+	}
+
+	return  tshirt.Price * float64(quantity)
+}
+
+func calculateMugTotalAmount(quantity int) float64 {
+	mug, err := productsDB.GetProductByCode(_mugCode)
+	if err != nil {
+		log.Println(err.Error())
+		return 0
+	}
+
+	return mug.Price * float64(quantity)
 }
 
 func buy2Get1Free(price float64, quantity int) float64 {
