@@ -8,12 +8,6 @@ type Basket struct {
 	TotalAmount float64        `json:"total_amount"`
 }
 
-type Product struct {
-	Code  string  `json:"code"`
-	Name  string  `json:"name"`
-	Price float64 `json:"price"`
-}
-
 func NewEmptyBasket() Basket {
 	return Basket{
 		ID:          uuid.NewString(),

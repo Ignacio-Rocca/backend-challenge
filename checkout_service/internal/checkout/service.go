@@ -1,15 +1,11 @@
 package checkout
 
 import (
-	"errors"
+	"checkout_service/internal/product"
 	"log"
 )
 
-var (
-	ErrBasketNotFound = errors.New("Basket not found")
-	ErrInvalidBasketId = errors.New("Invalid basket_id")
-	ErrInvalidProduct = errors.New("Invalid product")
-)
+const _tshirtDiscount = 0.75
 
 type Service interface {
 	GetBasketTotalAmount(basketId string) (float64, error)
@@ -19,30 +15,30 @@ type Service interface {
 }
 
 type service struct {
-
+	repo Repository
 }
 
-func NewService() *service {
-	return &service{}
+func NewService(repo Repository) *service {
+	return &service{repo: repo}
 }
 
 func (s *service) GetBasketTotalAmount(basketId string) (float64, error) {
-	basket, ok := checkoutDB[basketId]
-	if !ok {
-		log.Println(ErrBasketNotFound.Error())
-		return 0, ErrBasketNotFound
+	basket, err := s.repo.GetBasketByID(basketId)
+	if err != nil {
+		log.Println(err.Error())
+		return 0, err
 	}
 
 	totalAmount := 0.00
 
 	for productCode, quantity := range basket.Products {
 		switch productCode {
-		case _penCode:
-			totalAmount += calculatePenTotalAmount(quantity)
-		case _tshirtCode:
-			totalAmount += calculateTshirtTotalAmount(quantity)
-		case _mugCode:
-			totalAmount += calculateMugTotalAmount(quantity)
+		case product.PenCode:
+			totalAmount += s.calculatePenTotalAmount(quantity)
+		case product.TshirtCode:
+			totalAmount += s.calculateTshirtTotalAmount(quantity)
+		case product.MugCode:
+			totalAmount += s.calculateMugTotalAmount(quantity)
 		}
 	}
 
@@ -50,44 +46,19 @@ func (s *service) GetBasketTotalAmount(basketId string) (float64, error) {
 }
 
 func (s *service) CreateBasket() Basket {
-	basket := NewEmptyBasket()
-	_, exist := checkoutDB[basket.ID]
-	for exist {
-		basket = NewEmptyBasket()
-		_, exist = checkoutDB[basket.ID]
-	}
-	checkoutDB[basket.ID] = basket
-	return basket
+	return s.repo.AddNewBasket()
 }
 
 func (s *service) AddProduct(basketId, productCode string, quantity int) (Basket, error) {
-	basket, ok := checkoutDB[basketId]
-	if !ok {
-		log.Println(ErrInvalidBasketId.Error())
-		return Basket{}, ErrInvalidBasketId
-	}
-
-	product, err := productsDB.GetProductByCode(productCode)
-	if err != nil {
-		log.Println(err.Error())
-		return Basket{}, err
-	}
-
-	basket.Products[product.Code] += quantity
-	return basket, nil
+	return s.repo.AddProductToBasket(basketId, productCode, quantity)
 }
 
 func (s *service) DeleteBasket(basketId string) error {
-	if _, ok := checkoutDB[basketId]; !ok {
-		return ErrInvalidBasketId
-	}
-	delete(checkoutDB, basketId)
-	return nil
+	return s.repo.DeleteBasket(basketId)
 }
 
-
-func calculatePenTotalAmount(quantity int) float64 {
-	pen, err := productsDB.GetProductByCode(_penCode)
+func (s *service) calculatePenTotalAmount(quantity int) float64 {
+	pen, err := s.repo.GetProductByCode(product.PenCode)
 	if err != nil {
 		log.Println(err.Error())
 		return 0
@@ -96,22 +67,22 @@ func calculatePenTotalAmount(quantity int) float64 {
 	return buy2Get1Free(pen.Price, quantity)
 }
 
-func calculateTshirtTotalAmount(quantity int) float64 {
-	tshirt, err := productsDB.GetProductByCode(_tshirtCode)
+func (s *service) calculateTshirtTotalAmount(quantity int) float64 {
+	tshirt, err := s.repo.GetProductByCode(product.TshirtCode)
 	if err != nil {
 		log.Println(err.Error())
 		return 0
 	}
 
 	if quantity >= 3 {
-		return  tshirt.Price * float64(quantity) * _tshirtDiscount
+		return tshirt.Price * float64(quantity) * _tshirtDiscount
 	}
 
-	return  tshirt.Price * float64(quantity)
+	return tshirt.Price * float64(quantity)
 }
 
-func calculateMugTotalAmount(quantity int) float64 {
-	mug, err := productsDB.GetProductByCode(_mugCode)
+func (s *service) calculateMugTotalAmount(quantity int) float64 {
+	mug, err := s.repo.GetProductByCode(product.MugCode)
 	if err != nil {
 		log.Println(err.Error())
 		return 0
@@ -122,12 +93,12 @@ func calculateMugTotalAmount(quantity int) float64 {
 
 func buy2Get1Free(price float64, quantity int) float64 {
 	total := 0.00
-	if quantity % 2 == 0 {
+	if quantity%2 == 0 {
 		multiplier := quantity / 2
-		total +=  price * float64(multiplier)
+		total += price * float64(multiplier)
 	} else {
 		multiplier := (quantity / 2) + 1
-		total +=  price * float64(multiplier)
+		total += price * float64(multiplier)
 	}
 	return total
 }
