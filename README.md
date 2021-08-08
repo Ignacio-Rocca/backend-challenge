@@ -1,3 +1,10 @@
+# How to run the service with docker
+- `docker build -t checkout-service .`
+- `docker run -p 8080:8080 -it checkout-service`
+
+
+# Problem
+
 Lana has come to conclusion that users are very likely to buy awesome Lana merchandising from a physical store that sells the following 3 products:
 
 ```
